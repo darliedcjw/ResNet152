@@ -97,6 +97,7 @@ class ResNet152(nn.Module):
 
 
         self.layers = self._create_conv_layers()
+        self.initialize_weights()
 
 
     def _create_conv_layers(self):
@@ -171,6 +172,24 @@ class ResNet152(nn.Module):
         x = self.sm(x)
         
         return x
+
+
+    def initialize_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight)
+
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+            
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+
+            elif isinstance(m, nn.Linear):
+                nn.init.kaiming_normal_(m.weight)
+                nn.init.constant_(m.bias, 0)
+
 
 if __name__ == "__main__":
     x = torch.randn(4,3,224,224)
