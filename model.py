@@ -177,7 +177,7 @@ class ResNet152(nn.Module):
     def initialize_weights(self):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                nn.init.kaiming_normal_(m.weight)
+                nn.init.kaiming_normal_(m.weight,mode='fan_out', nonlinearity='relu')
 
                 if m.bias is not None:
                     nn.init.constant_(m.bias, 0)
@@ -186,12 +186,12 @@ class ResNet152(nn.Module):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
 
-            elif isinstance(m, nn.Linear):
-                nn.init.kaiming_normal_(m.weight)
-                nn.init.constant_(m.bias, 0)
-
 
 if __name__ == "__main__":
     x = torch.randn(4,3,224,224)
     model = ResNet152(3, 2)
-    out = model(x)
+    count = 0
+    for m in model.modules():
+        if isinstance(m, nn.Conv2d):
+            count += 1
+            print(count)
