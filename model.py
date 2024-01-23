@@ -10,7 +10,7 @@ resnet152_config = [
     ["B", 3, True],
     "AP", # Average Pooling
     "F", # Flattern
-    ["L", 2048, 2] # FC, in, out
+    ["L", 2048] # FC, in, out
 ] 
 
 
@@ -132,11 +132,11 @@ class ResNet152(nn.Module):
                     in_channels = in_channels*2
 
                 elif module[0] == "L":
-                    in_features, out_features = module[1:]
+                    in_features = module[1]
                     layers.append(
                         nn.Linear(
                             in_features,
-                            out_features
+                            self.num_classes
                         )
                     )
             

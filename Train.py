@@ -29,6 +29,7 @@ class Train():
         num_workers,
         device,
         use_tensorboard,
+        checkpoint
         ):
 
         self.ds_train = ds_train
@@ -69,20 +70,31 @@ class Train():
         if self.use_tensorboard:
             self.summary_writer.add_text('parameters', '\n'.join(self.parameters))
 
-
-        # Model
-        self.model = ResNet152(in_channels=3, num_classes=num_classes).to(device)
-
-        # Optimizer
-        if optimizer == 'SGD':
-            self.optimizer = SGD(self.model.parameters(), lr=self.learning_rate, momentum=self.momentum)
-        elif optimizer == 'Adam':
-            self.optimizer = Adam(self.model.parameters(), lr=self.learning_rate)
-        elif optimizer == 'RMSprop':
-            self.optimizer = RMSprop(self.model.parameters(), lr=self.learning_rate, momentum=self.momentum)
+        # CheckPoint
+        if checkpoint:
+            
+            checkpoint = torch.load(checkpoint, map_location=device)
+            self.model = ResNet152(in_channels=1, num_classes=10).to(device)
+            self.model.load_state_dict(checkpoint['model'])
+            if optimizer == 'SGD':
+                self.optimizer = SGD(self.model.parameters(), lr=self.learning_rate, momentum=self.momentum)
+            elif optimizer == 'Adam':
+                self.optimizer = Adam(self.model.parameters(), lr=self.learning_rate)
+            elif optimizer == 'RMSprop':
+                self.optimizer = RMSprop(self.model.parameters(), lr=self.learning_rate, momentum=self.momentum)
+            else:
+                raise NotImplementedError('Please specify the correct optimizer!')
+            self.optimizer.load_state_dict(checkpoint['optimizer'])       
         else:
-            raise NotImplementedError('Please specify the correct optimizer!')        
-
+            self.model = ResNet152(in_channels=1, num_classes=num_classes).to(device)
+            if optimizer == 'SGD':
+                self.optimizer = SGD(self.model.parameters(), lr=self.learning_rate, momentum=self.momentum)
+            elif optimizer == 'Adam':
+                self.optimizer = Adam(self.model.parameters(), lr=self.learning_rate)
+            elif optimizer == 'RMSprop':
+                self.optimizer = RMSprop(self.model.parameters(), lr=self.learning_rate, momentum=self.momentum)
+            else:
+                raise NotImplementedError('Please specify the correct optimizer!')       
 
         if self.lr_scheduler != None:
             self.scheduler = MultiStepLR(self.optimizer, milestones=lr_scheduler, gamma=0.1)
@@ -92,7 +104,7 @@ class Train():
 
 
         # DataLoader
-        self.dl_train = DataLoader(self.ds_train, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers, drop_last=True)
+        self.dl_train = DataLoader(self.ds_train, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers, drop_last=False)
         self.len_dl_train = len(self.dl_train)
         print('Training Data Loaded: {}'.format(self.len_dl_train))
 
